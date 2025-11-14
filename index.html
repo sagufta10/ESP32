@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ESP32 Live Light Control</title>
+</head>
+<body>
+  <h2>ESP32 Light Control (Live)</h2>
+
+  <h3>Light Status: <span id="status">Loading...</span></h3>
+
+  <button onclick="turnOn()">Turn ON</button>
+  <button onclick="turnOff()">Turn OFF</button>
+
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+  <script>
+    // 🔥 Your Firebase Config (PASTED EXACTLY)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBrPt4qMRJJVogs-qfLExlhpJ3vACONI60",
+      authDomain: "esp32check-d113e.firebaseapp.com",
+      databaseURL: "https://esp32check-d113e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "esp32check-d113e",
+      storageBucket: "esp32check-d113e.firebasestorage.app",
+      messagingSenderId: "203490926130",
+      appId: "1:203490926130:web:08aef09c5efa69fe6c262b",
+      measurementId: "G-VEK3FG924C"
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const statusText = document.getElementById("status");
+
+    // LIVE listener for light status
+    db.ref("devices/devices001/light_state").on("value", (snapshot) => {
+      const value = snapshot.val();
+      statusText.textContent = value;
+
+      if (value === "ON") {
+        statusText.style.color = "green";
+      } else {
+        statusText.style.color = "red";
+      }
+    });
+
+    // Buttons
+    function turnOn() {
+      db.ref("devices/devices001/light_state").set("ON");
+    }
+
+    function turnOff() {
+      db.ref("devices/devices001/light_state").set("OFF");
+    }
+  </script>
+</body>
+</html>
