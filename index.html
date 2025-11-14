@@ -1,22 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ESP32 Live Light Control</title>
+  <title>ESP32 Live Light Control + Voice</title>
 </head>
 <body>
-  <h2>ESP32 Light Control (Live)</h2>
+  <h2>ESP32 Light Control (Live + Voice)</h2>
 
   <h3>Light Status: <span id="status">Loading...</span></h3>
 
   <button onclick="turnOn()">Turn ON</button>
   <button onclick="turnOff()">Turn OFF</button>
+  <br><br>
+
+  <!-- 🎤 Voice recognition button -->
+  <button onclick="startListening()">🎤 Voice Control</button>
+  <p id="voiceText" style="font-weight:bold;"></p>
 
   <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
   <script>
-    // 🔥 Your Firebase Config (PASTED EXACTLY)
+    // 🔥 Your Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyBrPt4qMRJJVogs-qfLExlhpJ3vACONI60",
       authDomain: "esp32check-d113e.firebaseapp.com",
@@ -33,8 +38,9 @@
     const db = firebase.database();
 
     const statusText = document.getElementById("status");
+    const voiceText = document.getElementById("voiceText");
 
-    // LIVE listener for light status
+    // LIVE status listener
     db.ref("devices/devices001/light_state").on("value", (snapshot) => {
       const value = snapshot.val();
       statusText.textContent = value;
@@ -46,13 +52,49 @@
       }
     });
 
-    // Buttons
+    // ON/OFF button functions
     function turnOn() {
       db.ref("devices/devices001/light_state").set("ON");
     }
 
     function turnOff() {
       db.ref("devices/devices001/light_state").set("OFF");
+    }
+
+    // 🎤 Voice Recognition
+    function startListening() {
+      if (!('webkitSpeechRecognition' in window)) {
+        alert("Speech Recognition not supported on this browser. Use Chrome.");
+        return;
+      }
+
+      const recognition = new webkitSpeechRecognition();
+      recognition.lang = "en-US";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      voiceText.innerText = "Listening... 🎧";
+
+      recognition.start();
+
+      recognition.onresult = function(event) {
+        const spoken = event.results[0][0].transcript.toLowerCase();
+        voiceText.innerText = "You said: " + spoken;
+
+        if (spoken.includes("on")) {
+          turnOn();
+        }
+        else if (spoken.includes("off")) {
+          turnOff();
+        }
+        else {
+          voiceText.innerText += " (command not recognized)";
+        }
+      };
+
+      recognition.onerror = function(event) {
+        voiceText.innerText = "Error: " + event.error;
+      };
     }
   </script>
 </body>
